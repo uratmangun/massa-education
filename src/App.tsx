@@ -233,10 +233,18 @@ function CoursePage() {
             >
               ← Back to Home
             </Button>
-            <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Massa Smart Contract Course
-            </h1>
-            <p className="text-xl text-gray-300">Master blockchain development with hands-on tutorials</p>
+            <div className="text-center">
+              <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Massa Smart Contract Course
+              </h1>
+              <p className="text-xl text-gray-300 mb-6">Master blockchain development with hands-on tutorials</p>
+              <Button 
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => {/* Add course functionality */}}
+              >
+                + Add Course
+              </Button>
+            </div>
           </div>
 
           {/* Course Modules */}
