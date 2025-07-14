@@ -2,38 +2,93 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StagewiseToolbar } from "@stagewise/toolbar-react";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "react-router-dom";
+import ReactMarkdown from 'react-markdown';
 import "./index.css";
 
 function CourseContentPage() {
   const navigate = useNavigate();
   const { moduleId } = useParams();
 
-  const mockLessons = {
+  const mockCourses = {
     "1": {
       title: "Introduction to Massa Blockchain",
-      lessons: [
-        { id: 1, title: "What is Massa?", content: "Massa is a truly decentralized blockchain that solves the trilemma of scalability, security, and decentralization...", completed: true },
-        { id: 2, title: "Key Features", content: "Learn about Massa's unique features like autonomous smart contracts, parallel execution, and proof-of-stake consensus...", completed: true },
-        { id: 3, title: "Setting up Development Environment", content: "Install the necessary tools and configure your development environment for Massa development...", completed: false }
-      ]
+      duration: "45 min read",
+      content: {
+        introduction: "Welcome to the Massa blockchain course! In this comprehensive tutorial, you'll learn everything you need to know about Massa, a revolutionary blockchain platform that achieves true decentralization.",
+        sections: [
+          {
+            title: "What is Massa?",
+            content: "Massa is a truly decentralized blockchain that solves the blockchain trilemma by achieving scalability, security, and decentralization simultaneously. Unlike other blockchains, Massa uses a unique block-DAG architecture that allows for parallel block production."
+          },
+          {
+            title: "Key Features",
+            content: "Massa introduces several groundbreaking features:\n\n• **Autonomous Smart Contracts**: Self-executing contracts that can wake up and execute periodically\n• **Parallel Execution**: Multiple blocks can be produced simultaneously\n• **True Decentralization**: No delegation, every token holder can participate\n• **High Throughput**: Capable of processing thousands of transactions per second"
+          },
+          {
+            title: "Architecture Overview",
+            content: "Massa uses a block-DAG (Directed Acyclic Graph) structure instead of a linear blockchain. This allows for:\n\n1. **Parallel Block Production**: Multiple blocks can be created simultaneously\n2. **Better Finality**: Faster transaction confirmations\n3. **Increased Throughput**: Higher transaction processing capacity"
+          }
+        ],
+        codeExample: {
+          title: "Setting Up Massa Node",
+          code: `// Install Massa node
+curl -sSfL 'https://github.com/massalabs/massa/releases/download/MAIN.2.1/massa_MAIN.2.1_release_linux.tar.gz' | tar -xzv
+
+// Start the node
+cd massa/massa-node/
+./massa-node
+
+// Check node status
+./massa-client get_status`
+        },
+        quiz: [
+          { question: "What makes Massa different from other blockchains?", answer: "Block-DAG architecture enabling parallel execution" },
+          { question: "What are Autonomous Smart Contracts?", answer: "Self-executing contracts that can wake up periodically" }
+        ]
+      }
     },
     "2": {
       title: "Smart Contract Basics",
-      lessons: [
-        { id: 1, title: "Smart Contract Architecture", content: "Understanding the structure and components of Massa smart contracts...", completed: true },
-        { id: 2, title: "AssemblyScript Basics", content: "Learn the fundamentals of AssemblyScript for writing Massa smart contracts...", completed: false },
-        { id: 3, title: "Contract Deployment", content: "Step-by-step guide to deploying your first smart contract on Massa...", completed: false }
-      ]
+      duration: "60 min read",
+      content: {
+        introduction: "Learn the fundamentals of writing smart contracts on Massa using AssemblyScript. This tutorial covers everything from basic syntax to deployment strategies.",
+        sections: [
+          {
+            title: "Smart Contract Architecture",
+            content: "Massa smart contracts are written in AssemblyScript and compiled to WebAssembly. They consist of:\n\n• **Entry Points**: Functions that can be called externally\n• **State Management**: Persistent storage for contract data\n• **Event Emission**: Communication with external systems"
+          },
+          {
+            title: "AssemblyScript Basics",
+            content: "AssemblyScript is a TypeScript-like language that compiles to WebAssembly. Key concepts:\n\n• **Strongly Typed**: All variables must have explicit types\n• **Memory Management**: Manual memory allocation and deallocation\n• **No Dynamic Features**: No eval, reflection, or dynamic typing"
+          }
+        ],
+        codeExample: {
+          title: "Hello World Contract",
+          code: `import { generateEvent } from '@massalabs/massa-as-sdk';
+
+export function main(): void {
+  generateEvent("Hello, Massa!");
+}
+
+export function greet(name: string): string {
+  return "Hello, " + name + "!";
+}`
+        },
+        quiz: [
+          { question: "What language are Massa smart contracts written in?", answer: "AssemblyScript" },
+          { question: "What do smart contracts compile to?", answer: "WebAssembly" }
+        ]
+      }
     }
   };
 
-  const currentModule = mockLessons[moduleId as keyof typeof mockLessons];
+  const currentCourse = mockCourses[moduleId as keyof typeof mockCourses];
 
-  if (!currentModule) {
+  if (!currentCourse) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">Module Not Found</h1>
+          <h1 className="text-4xl font-bold text-white mb-4">Course Not Found</h1>
           <Button onClick={() => navigate('/course')} className="bg-purple-600 hover:bg-purple-700">
             Back to Course
           </Button>
@@ -55,84 +110,96 @@ function CourseContentPage() {
             >
               ← Back to Course Overview
             </Button>
-            <h1 className="text-4xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Module {moduleId}: {currentModule.title}
-            </h1>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-4xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                {currentCourse.title}
+              </h1>
+              <span className="text-purple-400 font-medium">{currentCourse.duration}</span>
+            </div>
           </div>
 
-          {/* Progress Bar */}
+          {/* Introduction */}
           <Card className="bg-white/10 backdrop-blur-sm border-white/20 mb-8">
             <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-white">Module Progress</h3>
-                <span className="text-purple-400 font-medium">
-                  {currentModule.lessons.filter(l => l.completed).length}/{currentModule.lessons.length} Lessons
-                </span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-3">
-                <div 
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-300"
-                  style={{ width: `${(currentModule.lessons.filter(l => l.completed).length / currentModule.lessons.length) * 100}%` }}
-                ></div>
+              <h2 className="text-2xl font-bold text-white mb-4">Course Overview</h2>
+              <div className="text-gray-300 leading-relaxed prose prose-invert max-w-none">
+                <ReactMarkdown>{currentCourse.content.introduction}</ReactMarkdown>
               </div>
             </CardContent>
           </Card>
 
-          {/* Lessons List */}
-          <div className="space-y-6">
-            {currentModule.lessons.map((lesson, index) => (
-              <Card key={lesson.id} className="bg-white/10 backdrop-blur-sm border-white/20">
+          {/* Course Sections */}
+          <div className="space-y-8">
+            {currentCourse.content.sections.map((section, index) => (
+              <Card key={index} className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center justify-between">
-                    <span className="flex items-center gap-3">
-                      <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                        lesson.completed ? 'bg-green-500' : 'bg-gray-500'
-                      }`}>
-                        {index + 1}
-                      </span>
-                      {lesson.title}
+                  <CardTitle className="text-white flex items-center gap-3">
+                    <span className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-sm font-bold">
+                      {index + 1}
                     </span>
-                    <span className={`text-sm ${lesson.completed ? 'text-green-400' : 'text-gray-400'}`}>
-                      {lesson.completed ? '✓ Completed' : '○ Not Started'}
-                    </span>
+                    {section.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-300 mb-4">{lesson.content}</p>
-                  <div className="flex gap-3">
-                    <Button 
-                      className={lesson.completed ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700'}
-                      size="sm"
-                    >
-                      {lesson.completed ? 'Review Lesson' : 'Start Lesson'}
-                    </Button>
-                    {lesson.completed && (
-                      <Button variant="outline" size="sm" className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white">
-                        View Certificate
-                      </Button>
-                    )}
+                  <div className="text-gray-300 leading-relaxed prose prose-invert max-w-none">
+                    <ReactMarkdown>{section.content}</ReactMarkdown>
                   </div>
                 </CardContent>
               </Card>
             ))}
+
+            {/* Code Example */}
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <span className="text-2xl">💻</span>
+                  {currentCourse.content.codeExample.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
+                  <code>{currentCourse.content.codeExample.code}</code>
+                </pre>
+              </CardContent>
+            </Card>
+
+            {/* Quiz Section */}
+            <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm border-purple-400/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <span className="text-2xl">🧠</span>
+                  Knowledge Check
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {currentCourse.content.quiz.map((item, index) => (
+                    <div key={index} className="border-l-4 border-purple-400 pl-4">
+                      <p className="text-white font-medium mb-2">Q{index + 1}: {item.question}</p>
+                      <p className="text-gray-300">A: {item.answer}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Next Module Suggestion */}
-          <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm border-purple-400/30 mt-8">
+          {/* Course Completion */}
+          <Card className="bg-gradient-to-r from-green-600/20 to-blue-600/20 backdrop-blur-sm border-green-400/30 mt-8">
             <CardContent className="p-6 text-center">
-              <h3 className="text-xl font-bold text-white mb-4">🎉 Great Progress!</h3>
-              <p className="text-gray-300 mb-4">
-                Complete all lessons in this module to unlock the next one and earn testnet tokens
+              <h3 className="text-2xl font-bold text-white mb-4">🎯 Course Complete!</h3>
+              <p className="text-gray-300 mb-6">
+                Congratulations! You've completed this course. Continue to the next module to keep learning.
               </p>
               <div className="flex justify-center gap-4">
                 <Button 
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                  disabled={currentModule.lessons.some(l => !l.completed)}
+                  className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+                  onClick={() => navigate('/course')}
                 >
-                  Continue to Next Module
+                  Back to Course Overview
                 </Button>
                 <Button variant="outline" className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white">
-                  Take Quiz
+                  Download Certificate
                 </Button>
               </div>
             </CardContent>
@@ -175,7 +242,13 @@ function CoursePage() {
           {/* Course Modules */}
           <div className="grid gap-6 mb-8">
             {modules.map((module) => (
-              <Card key={module.id} className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all cursor-pointer">
+              <Card 
+                key={module.id} 
+                className={`bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all ${
+                  module.status === 'locked' ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'
+                }`}
+                onClick={() => module.status !== 'locked' && navigate(`/course/module/${module.id}`)}
+              >
                 <CardHeader>
                   <CardTitle className="text-white flex items-center justify-between">
                     <span className="flex items-center gap-3">
@@ -197,32 +270,12 @@ function CoursePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-300 mb-4">
+                  <p className="text-gray-300">
                     {module.id === 1 && "Learn the fundamentals of Massa blockchain and its unique features"}
                     {module.id === 2 && "Understanding smart contracts, their structure and basic operations"}
                     {module.id === 3 && "Hands-on tutorial to create and deploy your first smart contract"}
                     {module.id === 4 && "Explore advanced features like events, storage, and gas optimization"}
                   </p>
-                  <div className="flex items-center justify-between">
-                    <div className="w-full bg-gray-700 rounded-full h-2 mr-4">
-                      <div 
-                        className={`h-2 rounded-full ${
-                          module.status === 'completed' ? 'bg-green-500' : 
-                          module.status === 'in-progress' ? 'bg-blue-500' : 'bg-gray-500'
-                        }`}
-                        style={{ width: `${module.progress}%` }}
-                      ></div>
-                    </div>
-                    <Button 
-                      size="sm"
-                      onClick={() => navigate(`/course/module/${module.id}`)}
-                      disabled={module.status === 'locked'}
-                      className={module.status === 'locked' ? 'opacity-50 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'}
-                    >
-                      {module.status === 'completed' ? 'Review' : 
-                       module.status === 'in-progress' ? 'Continue' : 'Locked'}
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -265,7 +318,7 @@ function HomePage() {
             Massa Education
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Learn everything about massa smart contracts here and get massa testnet tokens
+            Learn everything about massa smart contracts here
           </p>
           <div className="flex gap-4 justify-center">
             <Link to="/course">
