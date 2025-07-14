@@ -1,0 +1,30 @@
+@import "../styles/globals.css";
+
+@layer base {
+  html, :root {
+    @apply font-sans m-0 p-0 w-full;
+  }
+
+  body {
+    @apply min-w-[320px] min-h-screen relative m-0 p-0 bg-background text-foreground;
+  }
+}
+
+
+
+@keyframes spin {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion) {
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+  }
+}
