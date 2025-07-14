@@ -1,7 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { StagewiseToolbar } from "@stagewise/toolbar-react";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "react-router-dom";
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import "./index.css";
 
@@ -240,7 +244,7 @@ function CoursePage() {
               <p className="text-xl text-gray-300 mb-6">Master blockchain development with hands-on tutorials</p>
               <Button 
                 className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => {/* Add course functionality */}}
+                onClick={() => navigate('/course/create')}
               >
                 + Add Course
               </Button>
@@ -310,6 +314,83 @@ function CoursePage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateCoursePage() {
+  const navigate = useNavigate();
+  const [sections, setSections] = useState([{ title: '', content: '' }]);
+
+  const addSection = () => {
+    setSections([...sections, { title: '', content: '' }]);
+  };
+
+  const handleSectionChange = (index, field, value) => {
+    const newSections = [...sections];
+    newSections[index][field] = value;
+    setSections(newSections);
+  };
+
+  const removeSection = (index) => {
+    const newSections = sections.filter((_, i) => i !== index);
+    setSections(newSections);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-8">
+      <div className="bg-white/10 backdrop-blur-sm border-white/20 rounded-lg w-full max-w-2xl p-8">
+        <h1 className="text-3xl font-bold text-white mb-8 text-center">Create Course</h1>
+
+        <div className="mb-8">
+          <Label htmlFor="courseTitle" className="text-white mb-2 block">Course Title</Label>
+          <Input id="courseTitle" placeholder="Enter course title" className="bg-transparent text-white placeholder:text-gray-400" />
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-white mb-4">Sections</h2>
+          <div className="space-y-6">
+            {sections.map((section, index) => (
+              <div key={index} className="bg-white/5 p-4 rounded-lg relative">
+                <div className="mb-4">
+                  <Label htmlFor={`sectionTitle-${index}`} className="text-white mb-2 block">Section Title</Label>
+                  <Input
+                    id={`sectionTitle-${index}`}
+                    placeholder="Enter section title"
+                    value={section.title}
+                    onChange={(e) => handleSectionChange(index, 'title', e.target.value)}
+                    className="bg-transparent text-white placeholder:text-gray-400"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`sectionContent-${index}`} className="text-white mb-2 block">Content</Label>
+                  <Textarea
+                    id={`sectionContent-${index}`}
+                    placeholder="Enter section content (Markdown supported)"
+                    value={section.content}
+                    onChange={(e) => handleSectionChange(index, 'content', e.target.value)}
+                    className="bg-transparent text-white placeholder:text-gray-400"
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeSection(index)}
+                  className="absolute top-2 right-2 text-red-400 hover:bg-red-400/10 hover:text-red-300"
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+          </div>
+          <Button onClick={addSection} className="mt-4 w-full bg-purple-600 hover:bg-purple-700">+ Add Section</Button>
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button variant="outline" className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white" onClick={() => navigate('/course')}>← Back to Course</Button>
+          <Button className="bg-green-600 hover:bg-green-700 text-white">Save Course</Button>
         </div>
       </div>
     </div>
@@ -414,7 +495,8 @@ export function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/course" element={<CoursePage />} />
-        <Route path="/course/module/:moduleId" element={<CourseContentPage />} />
+        <Route path="/course/create" element={<CreateCoursePage />} />
+          <Route path="/course/module/:moduleId" element={<CourseContentPage />} />
       </Routes>
     </BrowserRouter>
   );
