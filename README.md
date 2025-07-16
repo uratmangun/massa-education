@@ -1,117 +1,149 @@
 # Massa Education Platform
 
-A comprehensive course creation and learning management system built with React, TypeScript, and Supabase. This platform enables educators to create interactive courses with external API integration for quiz-like completion tracking.
+A comprehensive course creation and learning management system built with React, TypeScript, and Supabase. This platform enables educators to create interactive courses with external API integration for quiz-like completion tracking, specifically designed for Massa blockchain smart contract education.
 
 ## 🚀 Features
 
-### Course Creation
+### Course Creation & Management
 - **Dynamic Course Builder**: Create courses with multiple sections using markdown support
-- **Goals API Integration**: Connect courses to external APIs for interactive completion
+- **Interactive Goals System**: Connect courses to external APIs for quiz-like completion validation
 - **Real-time Preview**: See how your course will look before publishing
 - **Authorization Support**: Secure API communication with custom headers
 - **Student Instructions**: Guide learners on how to complete course objectives
+- **Course Completion Tracking**: Database-backed system to track user progress and completions
 
-### Course Management
-- **Course Listing**: Browse all available courses with interactive badges
-- **Content Viewing**: Rich course content display with markdown rendering
-- **Interactive Completion**: Quiz-like functionality through external API validation
-- **Progress Tracking**: Visual feedback for course completion status
+### Learning Experience
+- **Course Listing**: Browse all available courses with interactive badges and completion status
+- **Rich Content Display**: Markdown-rendered course content with responsive design
+- **Interactive Completion**: Submit answers to external APIs for course validation
+- **Progress Feedback**: Real-time status updates and completion confirmations
+- **Multi-section Courses**: Structured learning with organized content sections
 
 ### Technical Features
-- **Authentication**: Secure user management with Clerk
-- **Database**: PostgreSQL with Supabase for scalable data storage
-- **Real-time Updates**: Live preview and status updates
-- **Responsive Design**: Works seamlessly across all device sizes
-- **Type Safety**: Full TypeScript implementation
+- **Authentication**: Secure user management with Clerk integration
+- **Database**: PostgreSQL with Supabase for scalable data storage and RLS policies
+- **API Integration**: External endpoint support for interactive course completion
+- **Responsive Design**: Mobile-first approach that works across all device sizes
+- **Type Safety**: Full TypeScript implementation with proper type definitions
+- **Real-time Updates**: Live preview and status updates during course creation
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React 18, TypeScript, Vite
-- **Styling**: Tailwind CSS with custom components
-- **Authentication**: Clerk
-- **Database**: Supabase (PostgreSQL)
-- **Routing**: React Router v6
-- **Markdown**: ReactMarkdown for content rendering
-- **UI Components**: Custom component library with shadcn/ui
+- **Frontend**: React 19, TypeScript, Vite
+- **Styling**: Tailwind CSS 4.0 with custom components and animations
+- **Authentication**: Clerk (third-party auth provider)
+- **Database**: Supabase (PostgreSQL) with Row Level Security
+- **Routing**: React Router DOM v7
+- **Markdown**: ReactMarkdown for rich content rendering
+- **UI Components**: Custom component library built with Radix UI and shadcn/ui
+- **Package Manager**: Bun for fast dependency management
+- **Build Tool**: Vite for optimized development and production builds
 
 ## 📋 Prerequisites
 
 Before running this project, make sure you have:
 
-- Node.js (v18 or higher)
-- Bun package manager
-- Docker (for local Supabase)
-- Clerk account for authentication
-- Supabase project setup
+- **Node.js** (v18 or higher)
+- **Bun** package manager for fast dependency management
+- **Docker** (for local Supabase development environment)
+- **Clerk account** for authentication services
+- **Local Supabase setup** with project ID `<your local project id>`
 
 ## 🚀 Getting Started
 
 ### 1. Clone the Repository
 
-```bash
+```fish
 git clone <repository-url>
 cd massa-education-platform
 ```
 
 ### 2. Install Dependencies
 
-```bash
+```fish
 bun install
 ```
 
 ### 3. Environment Setup
 
-Create a `.env.local` file in the root directory:
+The project includes a `.env.local` file with the following configuration:
 
 ```env
 # Clerk Authentication
-VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+VITE_CLERK_PUBLISHABLE_KEY=
 
-# Supabase Configuration
+# Supabase Local Development
 VITE_SUPABASE_URL=http://127.0.0.1:54321
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_ANON_KEY=
 ```
 
 ### 4. Database Setup
 
-Start the local Supabase instance:
+The project uses a local Supabase instance with project ID `<your local supabase project id>`. All migrations are automatically applied using Docker:
 
-```bash
-# Start Supabase containers
-docker-compose up -d
-
-# Apply database migrations
-cat supabase/migrations/*.sql | docker exec -i <postgres_container_id> psql -U postgres -d postgres
+```fish
+# Migrations are applied directly to the PostgreSQL container
+cat supabase/migrations/20250716083943_create_courses_table.sql | docker exec -i <your supabase postgres container id> psql -U postgres -d postgres
 ```
 
 ### 5. Run the Development Server
 
-```bash
+```fish
 bun run dev
 ```
 
 The application will be available at `http://localhost:3000`
 
+## 🗄️ Database Schema
+
+The application uses the following database tables:
+
+### Courses Table
+- **id**: UUID primary key
+- **title**: Course title (TEXT)
+- **user_id**: UUID reference to auth.users (with CASCADE delete)
+- **sections**: Course content sections (JSONB array)
+- **goals**: Optional external API endpoint (TEXT)
+- **authorization_header**: API authorization header (TEXT)
+- **instructions**: Student instructions for course completion (TEXT)
+- **created_at/updated_at**: Timestamps with automatic updates
+
+### User Course Completions Table
+- **id**: UUID primary key
+- **user_id**: Clerk user ID (TEXT)
+- **course_id**: Reference to courses table (UUID)
+- **completed_at**: Completion timestamp
+- **Unique constraint**: One completion per user per course
+
 ## 📁 Project Structure
 
 ```
 massa-education-platform/
-├── .kiro/                          # Kiro AI development tools
-│   ├── hooks/                      # Automated development hooks
-│   ├── specs/                      # Feature specifications
-│   └── steering/                   # Development guidelines
 ├── src/
 │   ├── components/                 # React components
-│   │   ├── ui/                    # Reusable UI components
-│   │   ├── CreateCoursePage.tsx   # Course creation interface
-│   │   ├── CoursePage.tsx         # Course listing page
-│   │   └── CourseContentPage.tsx  # Individual course viewer
+│   │   ├── ui/                    # Reusable UI components (Button, Card, Input, etc.)
+│   │   ├── Header.tsx             # Navigation header component
+│   │   ├── HomePage.tsx           # Landing page with hero section
+│   │   ├── CoursePage.tsx         # Course listing and overview page
+│   │   ├── CreateCoursePage.tsx   # Course creation interface with preview
+│   │   └── CourseContentPage.tsx  # Individual course viewer and completion
 │   ├── lib/                       # Utility libraries
-│   └── App.tsx                    # Main application component
+│   │   ├── supabase.ts           # Supabase client configuration
+│   │   └── utils.ts              # Utility functions and helpers
+│   ├── App.tsx                    # Main application with routing
+│   ├── index.tsx                  # Application entry point
+│   └── index.css                  # Global styles and Tailwind imports
 ├── supabase/
-│   ├── functions/                 # Edge functions
-│   └── migrations/                # Database migrations
-└── README.md                      # Project documentation
+│   ├── config.toml               # Supabase local configuration
+│   ├── functions/                # Edge functions (course-handler)
+│   └── migrations/               # Database schema migrations (7 files)
+├── styles/
+│   └── globals.css               # Additional global styles
+├── .env.local                    # Environment variables
+├── package.json                  # Dependencies and scripts
+├── vite.config.ts               # Vite build configuration
+├── tsconfig.json                # TypeScript configuration
+└── README.md                    # Project documentation
 ```
 
 ## 🎯 Usage Guide
@@ -153,92 +185,63 @@ Courses can integrate with external APIs for completion tracking:
 }
 ```
 
-## 🤖 How .kiro Was Used
+## 🔧 Development Features
 
-This project was developed using Kiro AI, an intelligent development assistant that significantly accelerated the development process through several key features:
+### Local Development Environment
+- **Hot Reload**: Vite provides instant feedback during development
+- **TypeScript Support**: Full type checking and IntelliSense
+- **Tailwind CSS**: Utility-first styling with JIT compilation
+- **Component Library**: Reusable UI components with consistent design
 
-### Spec-Driven Development
+### Database Management
+- **Migration System**: Versioned database schema changes
+- **Row Level Security**: Secure data access policies
+- **Real-time Subscriptions**: Live data updates (available for future features)
+- **Local Development**: Docker-based Supabase for offline development
 
-**.kiro/specs/course-creation/** contains comprehensive specifications that guided the entire development process:
-
-- **requirements.md**: Detailed user stories and acceptance criteria
-- **design.md**: Technical architecture and component design
-- **tasks.md**: Step-by-step implementation plan with progress tracking
-
-### Automated Development Hooks
-
-**.kiro/hooks/** contains automated workflows that improve development efficiency:
-
-- **update-readme-on-save.md**: Automatically updates documentation when files change
-- Custom hooks for testing, deployment, and code quality checks
-
-### Intelligent Code Generation
-
-Kiro AI assisted with:
-
-- **Component Architecture**: Generated React components following best practices
-- **Database Schema**: Created optimized PostgreSQL migrations
-- **API Integration**: Implemented secure external API communication
-- **Error Handling**: Added comprehensive error states and user feedback
-- **TypeScript Types**: Generated type-safe interfaces and models
-
-### Development Steering
-
-**.kiro/steering/** provides project-specific guidelines that Kiro follows:
-
-- **Coding Standards**: Consistent code style and patterns
-- **Architecture Decisions**: Technical choices and rationale
-- **Security Practices**: Authentication and data protection guidelines
-- **Performance Optimization**: Database queries and frontend efficiency
-
-### Key Benefits of Using Kiro
-
-1. **Faster Development**: Reduced development time by 60-70% through intelligent code generation
-2. **Consistent Quality**: Maintained high code quality through automated best practices
-3. **Comprehensive Documentation**: Auto-generated and maintained project documentation
-4. **Error Prevention**: Proactive identification and resolution of potential issues
-5. **Architecture Guidance**: Expert-level architectural decisions and implementations
-
-### Kiro-Assisted Features
-
-- **Database Migrations**: Automated schema changes with proper rollback support
-- **Authentication Integration**: Seamless Clerk setup with security best practices
-- **API Error Handling**: Robust error states and user feedback systems
-- **Responsive Design**: Mobile-first approach with consistent styling
-- **Type Safety**: Complete TypeScript implementation with proper type definitions
-
-## 🔧 Development Workflow
-
-The development process leveraged Kiro's capabilities:
-
-1. **Specification Phase**: Kiro helped define comprehensive requirements and design
-2. **Implementation Phase**: AI-assisted code generation following the specifications
-3. **Testing Phase**: Automated testing strategies and error handling
-4. **Documentation Phase**: Auto-generated and maintained documentation
-5. **Deployment Phase**: Production-ready configuration and optimization
+### API Architecture
+- **RESTful Design**: Clean API endpoints through Supabase
+- **External Integration**: Support for third-party API validation
+- **Error Handling**: Comprehensive error states and user feedback
+- **Type Safety**: Full TypeScript interfaces for all data models
 
 ## 🚀 Deployment
 
 ### Production Build
 
-```bash
+```fish
 bun run build
 ```
 
 ### Environment Variables for Production
 
+Update your production environment with:
+
 ```env
+# Production Clerk Configuration
 VITE_CLERK_PUBLISHABLE_KEY=your_production_clerk_key
+
+# Production Supabase Configuration
 VITE_SUPABASE_URL=your_production_supabase_url
 VITE_SUPABASE_ANON_KEY=your_production_supabase_key
 ```
 
+### Deployment Checklist
+
+1. **Database Migration**: Apply all migrations to your production Supabase instance
+2. **Environment Variables**: Update all production environment variables
+3. **Clerk Configuration**: Configure production domain and redirect URLs
+4. **Build Optimization**: Run production build with optimizations enabled
+5. **Testing**: Verify all features work in production environment
+
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Follow the .kiro specifications for new features
-4. Submit a pull request with comprehensive documentation
+1. **Fork the Repository**: Create your own copy of the project
+2. **Create Feature Branch**: Work on features in dedicated branches
+3. **Follow Code Standards**: Maintain TypeScript types and component patterns
+4. **Test Thoroughly**: Ensure all features work with both local and external APIs
+5. **Update Documentation**: Keep README and code comments current
+6. **Submit Pull Request**: Provide clear description of changes and testing performed
 
 ## 📄 License
 
@@ -269,11 +272,13 @@ This project is committed to open source principles:
 
 ## 🙏 Acknowledgments
 
-- **Kiro AI**: For intelligent development assistance and automation
-- **Supabase**: For providing excellent backend-as-a-service
+- **Supabase**: For providing excellent backend-as-a-service platform
 - **Clerk**: For seamless authentication solutions
-- **React Community**: For the amazing ecosystem and tools
+- **React Community**: For the amazing ecosystem and development tools
+- **Tailwind CSS**: For the utility-first CSS framework
+- **Vite**: For the fast and modern build tooling
+- **Massa Blockchain**: For inspiring this educational platform
 
 ---
 
-*This project demonstrates the power of AI-assisted development with Kiro, showcasing how intelligent tooling can accelerate development while maintaining high quality and comprehensive documentation.*
+*Built with modern web technologies to provide an excellent learning experience for Massa blockchain smart contract development.*
