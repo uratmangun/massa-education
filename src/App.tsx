@@ -3,6 +3,7 @@ import { Header } from "./components/Header";
 import { HomePage } from "./components/HomePage";
 import { CoursePage } from "./components/CoursePage";
 import { CreateCoursePage } from "./components/CreateCoursePage";
+import { EditCoursePage } from "./components/EditCoursePage";
 import { CourseContentPage } from "./components/CourseContentPage";
 import "./index.css";
 
@@ -14,6 +15,7 @@ export function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/course" element={<CoursePage />} />
         <Route path="/course/create" element={<CreateCoursePage />} />
+        <Route path="/course/edit/:courseId" element={<EditCoursePage />} />
         <Route path="/course/:moduleId" element={<CourseContentPage />} />
       </Routes>
     </BrowserRouter>

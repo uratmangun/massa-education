@@ -140,9 +140,19 @@ export function CourseContentPage() {
                   <h1 className="text-4xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                     {course.title}
                   </h1>
-                  <span className="text-purple-400 font-medium">
-                    {course.sections.length} section{course.sections.length !== 1 ? 's' : ''}
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-purple-400 font-medium">
+                      {course.sections.length} section{course.sections.length !== 1 ? 's' : ''}
+                    </span>
+                    {user?.id === course.user_id && (
+                      <Button
+                        onClick={() => navigate(`/course/edit/${course.id}`)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        ✏️ Edit Course
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 

@@ -109,6 +109,17 @@ export function CoursePage() {
                             <span className="text-sm text-gray-400">
                               {course.sections.length} section{course.sections.length !== 1 ? 's' : ''}
                             </span>
+                            {user?.id === course.user_id && (
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/course/edit/${course.id}`);
+                                }}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 h-auto"
+                              >
+                                ✏️ Edit
+                              </Button>
+                            )}
                           </div>
                         </CardTitle>
                       </CardHeader>
