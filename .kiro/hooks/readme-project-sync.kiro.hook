@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "name": "README Project Sync",
+  "description": "Automatically updates the README.md file based on changes to project structure, package.json, configuration files, and source code to keep documentation aligned with the current state of the project",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      "package.json",
+      "src/**/*.tsx",
+      "src/**/*.ts",
+      "supabase/migrations/*.sql",
+      "supabase/functions/**/*.ts",
+      "components.json",
+      "vite.config.ts",
+      "tsconfig.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "The project structure or key files have been modified. Please analyze the current state of the project including:\n\n1. Package.json dependencies and scripts\n2. Source code structure and main components\n3. Supabase configuration and database schema\n4. Build configuration and tooling\n5. Key features and functionality\n\nThen update the README.md file to accurately reflect:\n- Project description and purpose\n- Installation and setup instructions\n- Available scripts and commands\n- Project structure overview\n- Key features and components\n- Database setup and migrations\n- Development workflow\n- Any other relevant documentation\n\nMake sure the README is comprehensive, up-to-date, and helpful for new developers joining the project."
+  }
+}
