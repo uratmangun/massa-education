@@ -1,0 +1,18 @@
+{
+  "name": "Auto Prettify Code",
+  "description": "Automatically format and prettify code whenever a file is saved",
+  "trigger": {
+    "type": "file_save",
+    "filePattern": "**/*.{js,jsx,ts,tsx,css,scss,json,md,html,vue,py,java,cpp,c,go,rs,php,rb,swift,kt}"
+  },
+  "action": {
+    "type": "agent_execution",
+    "prompt": "Format and prettify the code in the file that was just saved. Apply consistent indentation, proper spacing, remove unnecessary whitespace, and ensure the code follows best practices for readability. Only make formatting changes - do not modify the logic or functionality of the code.",
+    "context": {
+      "includeChangedFile": true,
+      "includeProjectStructure": false
+    }
+  },
+  "enabled": true,
+  "autoApprove": true
+}
