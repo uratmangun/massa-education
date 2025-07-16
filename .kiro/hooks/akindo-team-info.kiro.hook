@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Create AKINDO_TEAM.md",
+  "description": "Creates a project information file in the buildathon folder with project details and answers to key questions",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      "README.md",
+      "package.json",
+      "src/**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Create or update a file called `buildathon/AKINDO_TEAM.md`. The content should include:\n1. The name of this project\n2. Description of this project\n3. Tagline (100 words or less)\n4. Answers to the following questions in text format:\n   - What it does\n   - The problem it solves\n   - Challenges I ran into\n   - Technologies I used\n   - How we built it\n   - What we learned\n   - What's next for\n   - Update of this project today\n\nUse information from the project files to create comprehensive and accurate content."
+  }
+}
