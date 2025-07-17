@@ -2,25 +2,19 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 serve(async (req: Request) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': '*',
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Max-Age': '86400',
-        'Access-Control-Allow-Credentials': 'true',
-      }
-    })
-  }
-
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': '*',
     'Access-Control-Allow-Headers': '*',
     'Access-Control-Allow-Credentials': 'true',
     'Content-Type': 'application/json',
+  }
+
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      headers: corsHeaders
+    })
   }
 
   try {
@@ -138,12 +132,14 @@ serve(async (req: Request) => {
 
     if (!goalsResponse.ok) {
       let errorMessage = `Goals endpoint returned ${goalsResponse.status}: ${goalsResponse.statusText}`;
+      let errorData = null;
       
       try {
         // Try to get the actual error response from the server
         const errorResponse = await goalsResponse.json();
         if (errorResponse && (errorResponse.message || errorResponse.error)) {
           errorMessage = errorResponse.message || errorResponse.error || errorMessage;
+          errorData = errorResponse;
         }
       } catch (parseError) {
         // If we can't parse the response, try to get it as text
@@ -158,13 +154,16 @@ serve(async (req: Request) => {
         }
       }
       
+      // Return the error with CORS headers and preserve the original status code
       return new Response(
         JSON.stringify({
           status: "error",
-          message: errorMessage
+          message: errorMessage,
+          originalStatus: goalsResponse.status,
+          data: errorData
         }),
         { 
-          status: 502, 
+          status: goalsResponse.status, // Preserve original status code
           headers: corsHeaders 
         }
       );
@@ -188,11 +187,15 @@ serve(async (req: Request) => {
   } catch (error) {
     console.error('Function error:', error);
     
-    // Return error response
+    // Return error response with CORS headers
     return new Response(
       JSON.stringify({
         status: "error",
-        message: error.message || "An error occurred while processing the message"
+        message: error?.message || "An error occurred while processing the message",
+        debug: {
+          error: error?.toString(),
+          stack: error?.stack
+        }
       }),
       { 
         status: 500, 

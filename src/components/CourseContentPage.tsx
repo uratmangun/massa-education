@@ -161,9 +161,21 @@ export function CourseContentPage() {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321';
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+      console.log('Debug - Supabase URL:', supabaseUrl);
+      console.log('Debug - Supabase Key exists:', !!supabaseKey);
+      console.log('Debug - Supabase Key length:', supabaseKey?.length);
+      console.log('Debug - Module ID:', moduleId);
+
       if (!supabaseKey) {
         throw new Error('Supabase key not found');
       }
+
+      const requestBody = { 
+        message: userMessage.trim(),
+        courseId: moduleId
+      };
+
+      console.log('Debug - Request body:', requestBody);
 
       // Call the new course-message-handler Supabase function
       const response = await fetch(`${supabaseUrl}/functions/v1/course-message-handler`, {
@@ -172,10 +184,13 @@ export function CourseContentPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${supabaseKey}`,
         },
-        body: JSON.stringify({ 
-          message: userMessage.trim(),
-          courseId: moduleId
-        })
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('Debug - Response status:', response.status);
+      console.log('Debug - Response headers:', {
+        'content-type': response.headers.get('content-type'),
+        'access-control-allow-origin': response.headers.get('access-control-allow-origin')
       });
 
       const data = await response.json();
