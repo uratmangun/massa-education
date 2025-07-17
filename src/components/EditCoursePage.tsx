@@ -323,6 +323,10 @@ export function EditCoursePage() {
                                             <pre className="bg-black/20 p-2 rounded mt-1 text-xs"><code>{'{"message":"<student_message>"}'}</code></pre>
                                         </div>
                                         <div>
+                                            <strong className="text-blue-200">Authorization Header:</strong> If you provide an authorization header, it will be sent as:
+                                            <pre className="bg-black/20 p-2 rounded mt-1 text-xs"><code>Authorization: Bearer your_token_here</code></pre>
+                                        </div>
+                                        <div>
                                             <strong className="text-blue-200">Success Response:</strong> Return this format to mark the course as completed:
                                             <pre className="bg-black/20 p-2 rounded mt-1 text-xs"><code>{'{"status":"success","message":"<optional_message>"}'}</code></pre>
                                         </div>

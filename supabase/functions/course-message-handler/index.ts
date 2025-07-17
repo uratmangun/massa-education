@@ -126,7 +126,7 @@ serve(async (req: Request) => {
 
     // Add authorization header if provided
     if (course.authorization_header) {
-      requestHeaders['Authorization'] = course.authorization_header
+      requestHeaders['Authorization'] = `Bearer ${course.authorization_header}`
     }
 
     // Make POST request to the goals URL
@@ -137,10 +137,31 @@ serve(async (req: Request) => {
     });
 
     if (!goalsResponse.ok) {
+      let errorMessage = `Goals endpoint returned ${goalsResponse.status}: ${goalsResponse.statusText}`;
+      
+      try {
+        // Try to get the actual error response from the server
+        const errorResponse = await goalsResponse.json();
+        if (errorResponse && (errorResponse.message || errorResponse.error)) {
+          errorMessage = errorResponse.message || errorResponse.error || errorMessage;
+        }
+      } catch (parseError) {
+        // If we can't parse the response, try to get it as text
+        try {
+          const errorText = await goalsResponse.text();
+          if (errorText && errorText.trim()) {
+            errorMessage = errorText;
+          }
+        } catch (textError) {
+          // If all else fails, keep the original status message
+          console.error('Failed to parse error response:', textError);
+        }
+      }
+      
       return new Response(
         JSON.stringify({
           status: "error",
-          message: `Goals endpoint returned ${goalsResponse.status}: ${goalsResponse.statusText}`
+          message: errorMessage
         }),
         { 
           status: 502, 

@@ -4,30 +4,54 @@
 
 When working with Supabase Edge Functions in this project, always deploy functions directly to the running Edge Functions container.
 
+### Pre-Deployment Checks
+
+Before deploying any function, always verify the current configuration:
+
+```fish
+# 1. Check project ID from config.toml
+set PROJECT_ID (grep '^project_id' supabase/config.toml | cut -d'"' -f2)
+echo "Project ID: $PROJECT_ID"
+
+# 2. Get current Edge Functions container ID
+set CONTAINER_ID (docker ps --filter "name=supabase_edge_runtime_$PROJECT_ID" --format "{{.ID}}")
+echo "Edge Functions Container ID: $CONTAINER_ID"
+
+# 3. Verify container is running
+if test -z "$CONTAINER_ID"
+    echo "Error: Edge Functions container not found for project $PROJECT_ID"
+    exit 1
+end
+```
+
 ### Deployment Command Pattern
 
 Use this command pattern to deploy function changes:
 
 ```fish
+# Get project configuration
+set PROJECT_ID (grep '^project_id' supabase/config.toml | cut -d'"' -f2)
+set CONTAINER_ID (docker ps --filter "name=supabase_edge_runtime_$PROJECT_ID" --format "{{.ID}}")
+
 # Copy function to Edge Functions container
-docker cp supabase/functions/[function-name] 8e4471404ffe:/functions/
+docker cp supabase/functions/[function-name] $CONTAINER_ID:/functions/
 
 # Restart the Edge Functions container to pick up changes
-docker restart 8e4471404ffe
+docker restart $CONTAINER_ID
 ```
 
-### Container Details
+### Dynamic Container Detection
 
-- **Project ID**: `blog-zora-coin` (always use this for local Supabase operations)
-- **Edge Functions Container ID**: `8e4471404ffe80e74511908b546ac8ef02e766a16bc84763ec22e314eb9245d2`
+- **Project ID**: Automatically read from `supabase/config.toml`
+- **Edge Functions Container**: Detected using `docker ps --filter "name=supabase_edge_runtime_[PROJECT_ID]"`
 - **Functions Path**: `/functions/`
 - **Access URL**: `http://127.0.0.1:54321/functions/v1/[function-name]`
 
 ### Project Configuration
 
-- **Always use project ID**: `blog-zora-coin` for all local Supabase operations
-- **Config file**: `supabase/config.toml` should have `project_id = "blog-zora-coin"`
-- **Container naming**: All containers use the suffix `_blog-zora-coin`
+- **Project ID**: Automatically detected from `supabase/config.toml`
+- **Config file**: `supabase/config.toml` contains the authoritative project ID
+- **Container naming**: All containers use the suffix `_[PROJECT_ID]`
 
 ### Automatic Deployment Workflow
 
@@ -41,13 +65,30 @@ docker restart 8e4471404ffe
 All function calls require the Supabase anon key:
 - **Header**: `Authorization: Bearer [VITE_SUPABASE_ANON_KEY]`
 - **Key Location**: `.env.local` file
-- **Current Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0`
 
-### Example Usage
+
+### Complete Deployment Example
 
 When a new function is created or modified:
-1. **Copy**: `docker cp supabase/functions/my-function 8e4471404ffe:/functions/`
-2. **Restart**: `docker restart 8e4471404ffe`
+
+```fish
+# 1. Get project configuration
+set PROJECT_ID (grep '^project_id' supabase/config.toml | cut -d'"' -f2)
+set CONTAINER_ID (docker ps --filter "name=supabase_edge_runtime_$PROJECT_ID" --format "{{.ID}}")
+
+# 2. Verify container exists
+if test -z "$CONTAINER_ID"
+    echo "Error: Edge Functions container not found for project $PROJECT_ID"
+    exit 1
+end
+
+# 3. Deploy function
+docker cp supabase/functions/my-function $CONTAINER_ID:/functions/
+docker restart $CONTAINER_ID
+
+# 4. Verify deployment
+docker logs $CONTAINER_ID --tail 10
+```
 3. **Test**: `curl -X POST http://127.0.0.1:54321/functions/v1/my-function -H "Authorization: Bearer [anon-key]" -H "Content-Type: application/json" -d '{"test": "data"}'`
 4. **Verify**: Check function response and container logs
 
