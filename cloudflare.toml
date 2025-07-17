@@ -1,0 +1,15 @@
+[build]
+publish = "dist"
+command = "bun run build"
+
+[build.environment]
+NODE_VERSION = "20"
+
+[[build.upload.rules]]
+glob = "**/*"
+headers = { "cache-control" = "public, max-age=0, must-revalidate" }
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200

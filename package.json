@@ -9,6 +9,7 @@
     "dev": "vite",
     "start": "NODE_ENV=production bun src/index.tsx",
     "build": "vite build",
+    "postbuild": "cp -r .cloudflare/* dist/ 2>/dev/null || :",
     "preview": "vite preview"
   },
   "dependencies": {
