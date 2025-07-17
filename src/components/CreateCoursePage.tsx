@@ -214,6 +214,22 @@ export function CreateCoursePage() {
                                 <p className="text-gray-300 text-sm mb-4">
 Connect your course to an external API endpoint (optional). If provided, students will need to send a message to this endpoint to complete the course. If left empty, students can proceed to the next course without this verification step.
                                 </p>
+                                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-4">
+                                    <h3 className="text-blue-300 font-semibold mb-2">📋 API Integration Guide</h3>
+                                    <div className="text-sm text-gray-300 space-y-2">
+                                        <div>
+                                            <strong className="text-blue-200">Message Format:</strong> Your server will receive JSON requests like:
+                                            <pre className="bg-black/20 p-2 rounded mt-1 text-xs"><code>{'{"message":"<student_message>"}'}</code></pre>
+                                        </div>
+                                        <div>
+                                            <strong className="text-blue-200">Success Response:</strong> Return this format to mark the course as completed:
+                                            <pre className="bg-black/20 p-2 rounded mt-1 text-xs"><code>{'{"status":"success","message":"<optional_message>"}'}</code></pre>
+                                        </div>
+                                        <div className="text-yellow-200">
+                                            <strong>Note:</strong> Course will be marked as completed when your server responds with <code>status: "success"</code>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div className="bg-white/5 p-4 rounded-lg">
                                     <div className="mb-4">
                                         <Label htmlFor="goals" className="text-white mb-2 block">Goals Web Link</Label>

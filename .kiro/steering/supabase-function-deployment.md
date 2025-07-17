@@ -58,4 +58,76 @@ When a new function is created or modified:
 - **Local Integration**: Functions integrate properly with local Supabase stack
 - **Consistent Environment**: Matches production Edge Functions behavior
 
+## Troubleshooting Failed Deployments
+
+### When Functions Don't Load After Deployment
+
+If functions are not being recognized by the Edge Functions container after using the docker cp method, try these solutions:
+
+#### Solution 1: Restart Supabase Stack
+
+Sometimes the Edge Functions container may not pick up new functions properly. Restart the entire Supabase stack:
+
+```fish
+# Stop all Supabase services
+bunx supabase stop
+
+# Start all Supabase services
+bunx supabase start
+```
+
+#### Solution 2: Check Container Logs
+
+Verify if functions are loaded by checking container logs:
+
+```fish
+# Check current container ID
+docker ps | grep edge
+
+# Check logs for function loading
+docker logs [container-id] --tail 10
+```
+
+Look for lines like:
+```
+Serving functions on http://127.0.0.1:54321/functions/v1/<function-name>
+ - http://127.0.0.1:54321/functions/v1/your-function-name
+```
+
+#### Solution 3: Verify Function Structure
+
+Ensure your function has the correct structure:
+- `index.ts` - Main function code
+- `deno.json` - Deno configuration (required)
+- Proper serve() function export
+
+#### Solution 4: Manual Container Inspection
+
+Check if files were copied correctly:
+
+```fish
+# List functions in container
+docker exec [container-id] ls -la /functions/
+
+# Check specific function files
+docker exec [container-id] ls -la /functions/your-function-name/
+```
+
+### Common Issues
+
+1. **Function returns 404**: Usually means function wasn't loaded - try Solution 1
+2. **Container not starting**: Check for syntax errors in function code
+3. **Function not in logs**: Function directory may be missing or improperly structured
+4. **Persistent issues**: Remove and recreate the function directory, then redeploy
+
+### When to Use CLI Restart
+
+Use the Supabase CLI restart method when:
+- Functions don't appear in container logs after deployment
+- Getting 404 errors on function endpoints
+- Docker restart doesn't resolve the issue
+- Multiple functions are not being recognized
+
+This method ensures a clean restart of the entire Supabase stack and often resolves function loading issues.
+
 This ensures Edge Functions are properly deployed and accessible through the local Supabase API gateway without requiring remote deployment or additional CLI setup.

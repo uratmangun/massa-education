@@ -157,47 +157,60 @@ export function CourseContentPage() {
 
     setSubmittingGoal(true);
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      // Get the Supabase anon key from environment
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321';
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      // Add authorization header if provided
-      if (course.authorization_header && course.authorization_header.trim()) {
-        headers['Authorization'] = "Bearer " + course.authorization_header.trim();
+      if (!supabaseKey) {
+        throw new Error('Supabase key not found');
       }
 
-      const response = await fetch(course.goals, {
+      // Call the new course-message-handler Supabase function
+      const response = await fetch(`${supabaseUrl}/functions/v1/course-message-handler`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ message: userMessage.trim() })
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({ 
+          message: userMessage.trim(),
+          courseId: moduleId
+        })
       });
 
       const data = await response.json();
 
       if (response.ok && data.status === 'success') {
-        setGoalStatus({ status: 'success', message: data.message || 'Congratulations! You completed the course!' });
-        setCourseCompleted(true);
-        // Also mark course as completed in database
-        if (moduleId && user?.id) {
-          try {
-            const { error: completionError } = await supabase
-              .from('user_course_completions')
-              .insert({
-                user_id: user.id,
-                course_id: moduleId
-              });
-            
-            if (!completionError) {
-              setIsCompleted(true);
+        // Check if the goals endpoint returned a success status
+        const goalsResponse = data.data;
+        if (goalsResponse && goalsResponse.status === 'success') {
+          setGoalStatus({ status: 'success', message: goalsResponse.message || 'Congratulations! You completed the course!' });
+          setCourseCompleted(true);
+          // Also mark course as completed in database
+          if (moduleId && user?.id) {
+            try {
+              const { error: completionError } = await supabase
+                .from('user_course_completions')
+                .insert({
+                  user_id: user.id,
+                  course_id: moduleId
+                });
+              
+              if (!completionError) {
+                setIsCompleted(true);
+              }
+            } catch (error) {
+              console.error('Error marking course as completed:', error);
             }
-          } catch (error) {
-            console.error('Error marking course as completed:', error);
           }
+        } else {
+          setGoalStatus({ status: 'error', message: goalsResponse?.message || 'Incorrect answer. Please try again.' });
         }
       } else {
-        setGoalStatus({ status: 'error', message: data.message || 'Incorrect answer. Please try again.' });
+        setGoalStatus({ status: 'error', message: data.message || 'Failed to submit. Please try again.' });
       }
     } catch (error) {
+      console.error('Error submitting goal:', error);
       setGoalStatus({ status: 'error', message: 'Failed to submit. Please check your connection and try again.' });
     } finally {
       setSubmittingGoal(false);
