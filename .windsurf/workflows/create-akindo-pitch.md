@@ -2,7 +2,7 @@
 description: Create AKINDO_TEAM.md
 ---
 
-Create or update a file called `buildathon/AKINDO_TEAM.md`. The content should include:
+Create or update a file called `buildathon/AKINDO_TEAM.txt`. The content should include:
 1. The name of this project
 2. Description of this project
 3. Tagline (100 words or less)
@@ -16,4 +16,4 @@ Create or update a file called `buildathon/AKINDO_TEAM.md`. The content should i
    - What's next for
    - Update of this project today
 
-Use information from the project files to create comprehensive and accurate content.
+Use information from the project files to create comprehensive and accurate content. DO NOT USE MARKDOWN ONLY TEXT.
