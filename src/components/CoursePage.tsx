@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/clerk-react";
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { Search, Trash2 } from "lucide-react";
 
 interface Course {
   id: string;
@@ -21,6 +23,8 @@ export function CoursePage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [completedCourses, setCompletedCourses] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -32,12 +36,25 @@ export function CoursePage() {
     }
   }, [user?.id]);
 
+  // Search courses with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim()) {
+        searchCourses(searchQuery);
+      } else {
+        fetchCourses();
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
   const fetchCourses = async () => {
     try {
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error fetching courses:', error);
@@ -71,6 +88,73 @@ export function CoursePage() {
     }
   };
 
+  const searchCourses = async (query: string) => {
+    setSearching(true);
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .or(`title.ilike.%${query}%,instructions.ilike.%${query}%`)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error searching courses:', error);
+      } else {
+        // Also search in sections content
+        const allCourses = data || [];
+        const filteredByContent = allCourses.filter(course => {
+          return course.sections.some((section: any) => 
+            section.title.toLowerCase().includes(query.toLowerCase()) ||
+            section.content.toLowerCase().includes(query.toLowerCase())
+          );
+        });
+        
+        // Combine results and remove duplicates
+        const combinedResults = [...allCourses];
+        filteredByContent.forEach(course => {
+          if (!combinedResults.find(c => c.id === course.id)) {
+            combinedResults.push(course);
+          }
+        });
+        
+        setCourses(combinedResults);
+      }
+    } catch (error) {
+      console.error('Error searching courses:', error);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const deleteCourse = async (courseId: string, courseTitle: string) => {
+    if (!confirm(`Are you sure you want to delete "${courseTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', courseId)
+        .eq('user_id', user?.id); // Extra security check
+
+      if (error) {
+        console.error('Error deleting course:', error);
+        alert('Failed to delete course. Please try again.');
+      } else {
+        // Refresh courses list
+        if (searchQuery.trim()) {
+          searchCourses(searchQuery);
+        } else {
+          fetchCourses();
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      alert('Failed to delete course. Please try again.');
+    }
+  };
+
   return (
     <>
       <SignedIn>
@@ -100,17 +184,40 @@ export function CoursePage() {
                 </div>
               </div>
 
+              {/* Search Input */}
+              <div className="max-w-md mx-auto mb-8">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <Input
+                    type="text"
+                    placeholder="Search courses by title, content, or goals..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-400"
+                  />
+                </div>
+              </div>
+
               {/* Courses */}
               <div className="grid gap-6 mb-8">
-                {loading ? (
+                {(loading || searching) ? (
                   <div className="text-center text-white py-8">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
-                    <p>Loading courses...</p>
+                    <p>{searching ? 'Searching courses...' : 'Loading courses...'}</p>
                   </div>
                 ) : courses.length === 0 ? (
                   <div className="text-center text-gray-400 py-8">
-                    <p className="text-xl mb-4">No courses available yet</p>
-                    <p>Create your first course to get started!</p>
+                    {searchQuery ? (
+                      <>
+                        <p className="text-xl mb-4">No courses found</p>
+                        <p>Try adjusting your search terms</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xl mb-4">No courses available yet</p>
+                        <p>Create your first course to get started!</p>
+                      </>
+                    )}
                   </div>
                 ) : (
                   courses.map((course, index) => (
@@ -143,15 +250,26 @@ export function CoursePage() {
                               )}
                             </span>
                             {user?.id === course.user_id && (
-                              <Button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/course/edit/${course.id}`);
-                                }}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 h-auto"
-                              >
-                                ✏️ Edit
-                              </Button>
+                              <>
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/course/edit/${course.id}`);
+                                  }}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 h-auto"
+                                >
+                                  ✏️ Edit
+                                </Button>
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteCourse(course.id, course.title);
+                                  }}
+                                  className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 h-auto"
+                                >
+                                  <Trash2 size={12} />
+                                </Button>
+                              </>
                             )}
                           </div>
                         </CardTitle>

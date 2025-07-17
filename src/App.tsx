@@ -7,6 +7,7 @@ import { CoursePage } from "./components/CoursePage";
 import { CreateCoursePage } from "./components/CreateCoursePage";
 import { EditCoursePage } from "./components/EditCoursePage";
 import { CourseContentPage } from "./components/CourseContentPage";
+import { CheckBalancePage } from "./components/CheckBalancePage";
 import "./index.css";
 
 export function App() {
@@ -24,6 +25,7 @@ export function App() {
         <Route path="/course/create" element={<CreateCoursePage />} />
         <Route path="/course/edit/:courseId" element={<EditCoursePage />} />
         <Route path="/course/:moduleId" element={<CourseContentPage />} />
+        <Route path="/check-balance" element={<CheckBalancePage />} />
       </Routes>
     </BrowserRouter>
   );

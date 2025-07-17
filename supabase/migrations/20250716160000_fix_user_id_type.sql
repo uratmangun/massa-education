@@ -5,6 +5,9 @@ DROP POLICY IF EXISTS "Users can insert their own courses" ON public.courses;
 DROP POLICY IF EXISTS "Users can update their own courses" ON public.courses;
 DROP POLICY IF EXISTS "Users can delete their own courses" ON public.courses;
 
+-- Drop the foreign key constraint if it exists
+ALTER TABLE public.courses DROP CONSTRAINT IF EXISTS courses_user_id_fkey;
+
 -- Change user_id column from UUID to TEXT
 ALTER TABLE public.courses ALTER COLUMN user_id TYPE TEXT;
 

@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/clerk-react";
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { Trash2 } from "lucide-react";
 
 interface Course {
   id: string;
@@ -232,6 +233,35 @@ export function CourseContentPage() {
     }
   };
 
+  const deleteCourse = async () => {
+    if (!course || !user?.id || user.id !== course.user_id) {
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete "${course.title}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', course.id)
+        .eq('user_id', user.id); // Extra security check
+
+      if (error) {
+        console.error('Error deleting course:', error);
+        alert('Failed to delete course. Please try again.');
+      } else {
+        alert('Course deleted successfully!');
+        navigate('/course');
+      }
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      alert('Failed to delete course. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
@@ -297,12 +327,20 @@ export function CourseContentPage() {
                       )}
                     </span>
                     {user?.id === course.user_id && (
-                      <Button
-                        onClick={() => navigate(`/course/edit/${course.id}`)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        ✏️ Edit Course
-                      </Button>
+                      <>
+                        <Button
+                          onClick={() => navigate(`/course/edit/${course.id}`)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          ✏️ Edit Course
+                        </Button>
+                        <Button
+                          onClick={deleteCourse}
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -329,7 +367,7 @@ export function CourseContentPage() {
                 ))}
 
                 {/* Goals Section - Interactive Quiz/Completion - Only show to non-owners */}
-                {course.goals && course.instructions && !courseCompleted && user?.id !== course.user_id && (
+                {course.goals && course.instructions && !isCompleted && user?.id !== course.user_id && (
                   <Card className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border-blue-400/30">
                     <CardHeader>
                       <CardTitle className="text-white flex items-center gap-2">
@@ -375,7 +413,7 @@ export function CourseContentPage() {
                   </Card>
                 )}
 
-                {/* Course Completion Success */}
+                {/* Course Completion Success (immediate feedback after completing goals) */}
                 {courseCompleted && (
                   <Card className="bg-gradient-to-r from-green-600/20 to-blue-600/20 backdrop-blur-sm border-green-400/30">
                     <CardContent className="p-6 text-center">
@@ -406,8 +444,39 @@ export function CourseContentPage() {
                   </Card>
                 )}
 
+                {/* Interactive Course Completion (for courses with goals that are already completed) */}
+                {course.goals && isCompleted && !courseCompleted && user?.id !== course.user_id && (
+                  <Card className="bg-gradient-to-r from-green-600/20 to-blue-600/20 backdrop-blur-sm border-green-400/30">
+                    <CardContent className="p-6 text-center">
+                      <h3 className="text-2xl font-bold text-white mb-4">🎉 Course Completed!</h3>
+                      <p className="text-gray-300 mb-6">
+                        You've successfully completed this interactive course. Great job!
+                      </p>
+                      <div className="flex justify-center gap-4">
+                        <Button
+                          className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+                          onClick={() => navigate('/course')}
+                        >
+                          Back to Course Overview
+                        </Button>
+                        <Button variant="outline" className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white">
+                          View More Courses
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="border-orange-400 text-orange-400 hover:bg-orange-400 hover:text-white"
+                          onClick={handleStartOver}
+                          disabled={completingCourse}
+                        >
+                          {completingCourse ? 'Resetting...' : '🔄 Start Over Again'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Course Completion Button (for courses without goals) */}
-                {!course.goals && !isCompleted && (
+                {!course.goals && !isCompleted && user?.id !== course.user_id && (
                   <Card className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border-blue-400/30">
                     <CardContent className="p-6 text-center">
                       <h3 className="text-xl font-bold text-white mb-4">Ready to Complete?</h3>
@@ -426,7 +495,7 @@ export function CourseContentPage() {
                 )}
 
                 {/* Static Course Completion (for courses without goals) */}
-                {!course.goals && isCompleted && (
+                {!course.goals && isCompleted && user?.id !== course.user_id && (
                   <Card className="bg-gradient-to-r from-green-600/20 to-blue-600/20 backdrop-blur-sm border-green-400/30">
                     <CardContent className="p-6 text-center">
                       <h3 className="text-2xl font-bold text-white mb-4">🎉 Course Completed!</h3>

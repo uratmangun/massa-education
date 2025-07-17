@@ -6,6 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
 }
 
+// Network configuration
+const NETWORK_ENDPOINTS = {
+  mainnet: 'https://mainnet.massa.net/api/v2',
+  buildnet: 'https://buildnet.massa.net/api/v2'
+}
+
+type MassaNetwork = 'mainnet' | 'buildnet'
+
 
 
 serve(async (req) => {
@@ -30,7 +38,7 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { message } = await req.json();
+    const { message, network = 'mainnet' } = await req.json();
 
     // Validate input
     if (!message) {
@@ -46,8 +54,25 @@ serve(async (req) => {
       );
     }
 
+    // Validate network parameter
+    if (network !== 'mainnet' && network !== 'buildnet') {
+      return new Response(
+        JSON.stringify({
+          status: "error",
+          message: "Invalid network. Must be 'mainnet' or 'buildnet'."
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Get the appropriate network endpoint
+    const networkEndpoint = NETWORK_ENDPOINTS[network as MassaNetwork];
+
     // Call Massa RPC to get balance
-    const rpcResponse = await fetch('https://mainnet.massa.net/api/v2', {
+    const rpcResponse = await fetch(networkEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -103,6 +128,7 @@ serve(async (req) => {
         status: "success",
         data: {
           address: message,
+          network: network,
           balance: {
             raw: balanceNanoMas.toString(),
             formatted: balanceMas.toString() + " MAS"

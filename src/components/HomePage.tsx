@@ -14,7 +14,7 @@ export function HomePage() {
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Learn everything about massa smart contracts here
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-4 justify-center flex-wrap">
             <Link to="/course">
               <Button
                 size="lg"
@@ -31,6 +31,15 @@ export function HomePage() {
             >
               Get Testnet Tokens
             </Button>
+            <Link to="/check-balance">
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-green-400 text-green-400 hover:bg-green-400 hover:text-white px-8 py-3"
+              >
+                Check Balance
+              </Button>
+            </Link>
           </div>
         </div>
 

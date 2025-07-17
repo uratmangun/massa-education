@@ -4,11 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate, useParams } from "react-router-dom";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/clerk-react";
 import { supabase } from "../lib/supabase";
 import { Eye, EyeOff } from "lucide-react";
+import { handleImagePaste } from "../utils/imageUpload";
 
 interface Course {
     id: string;
@@ -38,6 +39,8 @@ export function EditCoursePage() {
     const [isLoading, setIsLoading] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [uploadError, setUploadError] = useState('');
+    const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
     useEffect(() => {
         if (courseId) {
@@ -65,7 +68,7 @@ export function EditCoursePage() {
                 setSections(data.sections.length > 0 ? data.sections : [{ title: '', content: '' }]);
                 setGoals(data.goals || '');
                 setInstructions(data.instructions || '');
-                setAuthorizationHeader(data.authorization_header || '');
+                setAuthorizationHeader(data.authorization_header === 'VITE_SUPABASE_ANON_KEY' ? '' : (data.authorization_header || ''));
             }
         } catch (error) {
             console.error('Error fetching course:', error);
@@ -88,6 +91,49 @@ export function EditCoursePage() {
     const removeSection = (index: number) => {
         const newSections = sections.filter((_, i) => i !== index);
         setSections(newSections);
+    };
+
+    const handleImagePasteForSection = (index: number, event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const textarea = event.currentTarget;
+        const cursorPosition = textarea.selectionStart;
+        
+        handleImagePaste(
+            event.nativeEvent,
+            (markdownText) => {
+                if (markdownText.includes('Uploading')) {
+                    // Insert loading text at cursor position
+                    const currentValue = sections[index].content;
+                    const newValue = 
+                        currentValue.slice(0, cursorPosition) + 
+                        markdownText + 
+                        currentValue.slice(cursorPosition);
+                    
+                    handleSectionChange(index, 'content', newValue);
+                    setUploadError('');
+                } else if (markdownText === '') {
+                    // Error case - remove loading text
+                    const currentValue = sections[index].content;
+                    const loadingText = '![Uploading image...](uploading)';
+                    const newValue = currentValue.replace(loadingText, '');
+                    handleSectionChange(index, 'content', newValue);
+                } else {
+                    // Success case - replace loading text with actual image
+                    const currentValue = sections[index].content;
+                    const loadingText = '![Uploading image...](uploading)';
+                    const newValue = currentValue.replace(loadingText, markdownText);
+                    handleSectionChange(index, 'content', newValue);
+                    setUploadError('');
+                }
+            },
+            (error) => {
+                setUploadError(`Failed to upload image: ${error}`);
+                // Remove loading text on error
+                const currentValue = sections[index].content;
+                const loadingText = '![Uploading image...](uploading)';
+                const newValue = currentValue.replace(loadingText, '');
+                handleSectionChange(index, 'content', newValue);
+            }
+        );
     };
 
     const testGoalsLink = async () => {
@@ -269,6 +315,12 @@ export function EditCoursePage() {
                                 />
                             </div>
 
+                            {uploadError && (
+                                <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded text-red-300 text-sm">
+                                    {uploadError}
+                                </div>
+                            )}
+
                             <div className="mb-8">
                                 <h2 className="text-xl font-semibold text-white mb-4">Sections</h2>
                                 <div className="space-y-6">
@@ -288,9 +340,10 @@ export function EditCoursePage() {
                                                 <Label htmlFor={`sectionContent-${index}`} className="text-white mb-2 block">Content</Label>
                                                 <Textarea
                                                     id={`sectionContent-${index}`}
-                                                    placeholder="Enter section content (Markdown supported)"
+                                                    placeholder="Enter section content (Markdown supported) - Paste images directly!"
                                                     value={section.content}
                                                     onChange={(e) => handleSectionChange(index, 'content', e.target.value)}
+                                                    onPaste={(e) => handleImagePasteForSection(index, e)}
                                                     className="bg-transparent text-white placeholder:text-gray-400"
                                                 />
                                             </div>
