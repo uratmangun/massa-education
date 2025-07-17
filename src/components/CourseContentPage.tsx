@@ -28,12 +28,20 @@ export function CourseContentPage() {
   const [goalStatus, setGoalStatus] = useState<{ status: 'success' | 'error' | null; message: string }>({ status: null, message: '' });
   const [submittingGoal, setSubmittingGoal] = useState(false);
   const [courseCompleted, setCourseCompleted] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [completingCourse, setCompletingCourse] = useState(false);
 
   useEffect(() => {
     if (moduleId) {
       fetchCourse(moduleId);
     }
   }, [moduleId]);
+
+  useEffect(() => {
+    if (moduleId && user?.id) {
+      checkCourseCompletion(moduleId, user.id);
+    }
+  }, [moduleId, user?.id]);
 
   const fetchCourse = async (courseId: string) => {
     console.log('Fetching course with ID:', courseId);
@@ -56,6 +64,88 @@ export function CourseContentPage() {
       console.error('Error fetching course:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkCourseCompletion = async (courseId: string, userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_course_completions')
+        .select('*')
+        .eq('course_id', courseId)
+        .eq('user_id', userId)
+        .single();
+
+      if (data && !error) {
+        setIsCompleted(true);
+      }
+    } catch (error) {
+      // No completion record found, which is fine
+      console.log('No completion record found');
+    }
+  };
+
+  const handleCourseCompletion = async () => {
+    if (!moduleId || !user?.id) {
+      return;
+    }
+
+    setCompletingCourse(true);
+    try {
+      const { error } = await supabase
+        .from('user_course_completions')
+        .insert({
+          user_id: user.id,
+          course_id: moduleId
+        });
+
+      if (error) {
+        console.error('Error marking course as completed:', error);
+        alert('Failed to mark course as completed. Please try again.');
+      } else {
+        setIsCompleted(true);
+        alert('Congratulations! Course marked as completed!');
+      }
+    } catch (error) {
+      console.error('Error marking course as completed:', error);
+      alert('Failed to mark course as completed. Please try again.');
+    } finally {
+      setCompletingCourse(false);
+    }
+  };
+
+  const handleStartOver = async () => {
+    if (!moduleId || !user?.id) {
+      return;
+    }
+
+    const confirmReset = window.confirm('Are you sure you want to start over? This will remove your completion status for this course.');
+    if (!confirmReset) {
+      return;
+    }
+
+    setCompletingCourse(true);
+    try {
+      const { error } = await supabase
+        .from('user_course_completions')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('course_id', moduleId);
+
+      if (error) {
+        console.error('Error resetting course completion:', error);
+        alert('Failed to reset course completion. Please try again.');
+      } else {
+        setIsCompleted(false);
+        setCourseCompleted(false);
+        setGoalStatus({ status: null, message: '' });
+        alert('Course completion status has been reset. You can now complete it again!');
+      }
+    } catch (error) {
+      console.error('Error resetting course completion:', error);
+      alert('Failed to reset course completion. Please try again.');
+    } finally {
+      setCompletingCourse(false);
     }
   };
 
@@ -87,6 +177,23 @@ export function CourseContentPage() {
       if (response.ok && data.status === 'success') {
         setGoalStatus({ status: 'success', message: data.message || 'Congratulations! You completed the course!' });
         setCourseCompleted(true);
+        // Also mark course as completed in database
+        if (moduleId && user?.id) {
+          try {
+            const { error: completionError } = await supabase
+              .from('user_course_completions')
+              .insert({
+                user_id: user.id,
+                course_id: moduleId
+              });
+            
+            if (!completionError) {
+              setIsCompleted(true);
+            }
+          } catch (error) {
+            console.error('Error marking course as completed:', error);
+          }
+        }
       } else {
         setGoalStatus({ status: 'error', message: data.message || 'Incorrect answer. Please try again.' });
       }
@@ -142,7 +249,13 @@ export function CourseContentPage() {
                   </h1>
                   <div className="flex items-center gap-4">
                     <span className="text-purple-400 font-medium">
-                      {course.sections.length} section{course.sections.length !== 1 ? 's' : ''}
+                      {isCompleted ? (
+                        <span className="text-green-400 font-semibold flex items-center gap-1">
+                          ✓ Completed
+                        </span>
+                      ) : (
+                        `${course.sections.length} section${course.sections.length !== 1 ? 's' : ''}`
+                      )}
                     </span>
                     {user?.id === course.user_id && (
                       <Button
@@ -241,25 +354,63 @@ export function CourseContentPage() {
                         <Button variant="outline" className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white">
                           View More Courses
                         </Button>
+                        <Button 
+                          variant="outline" 
+                          className="border-orange-400 text-orange-400 hover:bg-orange-400 hover:text-white"
+                          onClick={handleStartOver}
+                          disabled={completingCourse}
+                        >
+                          {completingCourse ? 'Resetting...' : '🔄 Start Over Again'}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
                 )}
 
-                {/* Static Course Completion (for courses without goals) */}
-                {!course.goals && (
-                  <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm border-purple-400/30">
+                {/* Course Completion Button (for courses without goals) */}
+                {!course.goals && !isCompleted && (
+                  <Card className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border-blue-400/30">
                     <CardContent className="p-6 text-center">
-                      <h3 className="text-2xl font-bold text-white mb-4">📚 Course Content Complete!</h3>
+                      <h3 className="text-xl font-bold text-white mb-4">Ready to Complete?</h3>
                       <p className="text-gray-300 mb-6">
-                        You've finished reading all the course content. Great job!
+                        Mark this course as completed to track your progress.
+                      </p>
+                      <Button
+                        onClick={handleCourseCompletion}
+                        disabled={completingCourse}
+                        className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold px-8 py-3"
+                      >
+                        {completingCourse ? 'Completing...' : '✓ Mark as Complete'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Static Course Completion (for courses without goals) */}
+                {!course.goals && isCompleted && (
+                  <Card className="bg-gradient-to-r from-green-600/20 to-blue-600/20 backdrop-blur-sm border-green-400/30">
+                    <CardContent className="p-6 text-center">
+                      <h3 className="text-2xl font-bold text-white mb-4">🎉 Course Completed!</h3>
+                      <p className="text-gray-300 mb-6">
+                        You've successfully completed this course. Great job!
                       </p>
                       <div className="flex justify-center gap-4">
                         <Button
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                          className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
                           onClick={() => navigate('/course')}
                         >
                           Back to Course Overview
+                        </Button>
+                        <Button variant="outline" className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white">
+                          View More Courses
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="border-orange-400 text-orange-400 hover:bg-orange-400 hover:text-white"
+                          onClick={handleStartOver}
+                          disabled={completingCourse}
+                        >
+                          {completingCourse ? 'Resetting...' : '🔄 Start Over Again'}
                         </Button>
                       </div>
                     </CardContent>

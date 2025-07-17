@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { StagewiseToolbar } from "@stagewise/toolbar-react";
+import ReactPlugin from "@stagewise-plugins/react";
 import { Header } from "./components/Header";
 import { HomePage } from "./components/HomePage";
 import { CoursePage } from "./components/CoursePage";
@@ -10,6 +12,11 @@ import "./index.css";
 export function App() {
   return (
     <BrowserRouter>
+      <StagewiseToolbar
+        config={{
+          plugins: [ReactPlugin],
+        }}
+      />
       <Header />
       <Routes>
         <Route path="/" element={<HomePage />} />

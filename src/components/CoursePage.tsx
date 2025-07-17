@@ -20,10 +20,17 @@ export function CoursePage() {
   const { user } = useUser();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [completedCourses, setCompletedCourses] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchCourses();
   }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchCompletedCourses();
+    }
+  }, [user?.id]);
 
   const fetchCourses = async () => {
     try {
@@ -41,6 +48,26 @@ export function CoursePage() {
       console.error('Error fetching courses:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCompletedCourses = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_course_completions')
+        .select('course_id')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching completed courses:', error);
+      } else {
+        const completedIds = new Set(data?.map(item => item.course_id) || []);
+        setCompletedCourses(completedIds);
+      }
+    } catch (error) {
+      console.error('Error fetching completed courses:', error);
     }
   };
 
@@ -107,7 +134,13 @@ export function CoursePage() {
                               </span>
                             )}
                             <span className="text-sm text-gray-400">
-                              {course.sections.length} section{course.sections.length !== 1 ? 's' : ''}
+                              {completedCourses.has(course.id) ? (
+                                <span className="text-green-400 font-semibold flex items-center gap-1">
+                                  ✓ Completed
+                                </span>
+                              ) : (
+                                `${course.sections.length} section${course.sections.length !== 1 ? 's' : ''}`
+                              )}
                             </span>
                             {user?.id === course.user_id && (
                               <Button
@@ -151,19 +184,16 @@ export function CoursePage() {
               <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm border-purple-400/30">
                 <CardContent className="p-8 text-center">
                   <h3 className="text-2xl font-bold text-white mb-4">🎯 Course Progress</h3>
-                  <p className="text-gray-300 mb-6">Complete all modules to earn testnet tokens and certification</p>
                   <div className="flex justify-center gap-4">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-purple-400">1/4</div>
+                      <div className="text-3xl font-bold text-purple-400">{completedCourses.size}/{courses.length}</div>
                       <div className="text-gray-300">Modules Complete</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-pink-400">25%</div>
+                      <div className="text-3xl font-bold text-pink-400">
+                        {courses.length > 0 ? Math.round((completedCourses.size / courses.length) * 100) : 0}%
+                      </div>
                       <div className="text-gray-300">Overall Progress</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-green-400">🏆</div>
-                      <div className="text-gray-300">Next Reward</div>
                     </div>
                   </div>
                 </CardContent>
