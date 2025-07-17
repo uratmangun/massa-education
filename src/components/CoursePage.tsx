@@ -171,8 +171,15 @@ export function CoursePage() {
                             </p>
                           </div>
                         )}
-                        <div className="mt-3 text-xs text-gray-500">
-                          Created {new Date(course.created_at).toLocaleDateString()}
+                        <div className="mt-3 text-xs text-gray-500 flex items-center justify-between">
+                          <span>Created {new Date(course.created_at).toLocaleDateString()}</span>
+                          <span className="text-gray-400">
+                            {course.user_id === user?.id ? (
+                              <span className="text-blue-400 font-medium">Created by You</span>
+                            ) : (
+                              <span>Created by {course.user_id.slice(0, 8)}...</span>
+                            )}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
@@ -186,12 +193,24 @@ export function CoursePage() {
                   <h3 className="text-2xl font-bold text-white mb-4">🎯 Course Progress</h3>
                   <div className="flex justify-center gap-4">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-purple-400">{completedCourses.size}/{courses.length}</div>
+                      <div className="text-3xl font-bold text-purple-400">
+                        {(() => {
+                          // Filter out user's own courses for progress calculation
+                          const otherCourses = courses.filter(course => course.user_id !== user?.id);
+                          const completedOtherCourses = otherCourses.filter(course => completedCourses.has(course.id));
+                          return `${completedOtherCourses.length}/${otherCourses.length}`;
+                        })()}
+                      </div>
                       <div className="text-gray-300">Modules Complete</div>
                     </div>
                     <div className="text-center">
                       <div className="text-3xl font-bold text-pink-400">
-                        {courses.length > 0 ? Math.round((completedCourses.size / courses.length) * 100) : 0}%
+                        {(() => {
+                          // Filter out user's own courses for progress calculation
+                          const otherCourses = courses.filter(course => course.user_id !== user?.id);
+                          const completedOtherCourses = otherCourses.filter(course => completedCourses.has(course.id));
+                          return otherCourses.length > 0 ? Math.round((completedOtherCourses.length / otherCourses.length) * 100) : 0;
+                        })()}%
                       </div>
                       <div className="text-gray-300">Overall Progress</div>
                     </div>

@@ -244,9 +244,20 @@ export function CourseContentPage() {
                   ← Back to Course Overview
                 </Button>
                 <div className="flex items-center justify-between mb-4">
-                  <h1 className="text-4xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    {course.title}
-                  </h1>
+                  <div>
+                    <h1 className="text-4xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                      {course.title}
+                    </h1>
+                    <div className="mt-2 text-sm text-gray-400">
+                      {course.user_id === user?.id ? (
+                        <span className="text-blue-400 font-medium">Created by You</span>
+                      ) : (
+                        <span>Created by {course.user_id.slice(0, 8)}...</span>
+                      )}
+                      <span className="mx-2">•</span>
+                      <span>Created {new Date(course.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-4">
                     <span className="text-purple-400 font-medium">
                       {isCompleted ? (
@@ -289,8 +300,8 @@ export function CourseContentPage() {
                   </Card>
                 ))}
 
-                {/* Goals Section - Interactive Quiz/Completion */}
-                {course.goals && course.instructions && !courseCompleted && (
+                {/* Goals Section - Interactive Quiz/Completion - Only show to non-owners */}
+                {course.goals && course.instructions && !courseCompleted && user?.id !== course.user_id && (
                   <Card className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border-blue-400/30">
                     <CardHeader>
                       <CardTitle className="text-white flex items-center gap-2">
