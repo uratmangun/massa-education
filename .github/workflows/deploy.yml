@@ -71,6 +71,7 @@ jobs:
 
       - name: Update repository website URL
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -87,7 +88,8 @@ jobs:
                 });
                 console.log(`Repository website URL updated to: ${deploymentUrl}`);
               } catch (error) {
-                console.error('Failed to update repository website URL:', error);
+                console.log('Note: Unable to update repository homepage automatically. This requires admin permissions.');
+                console.log(`Deployment URL: ${deploymentUrl}`);
               }
             }
 
