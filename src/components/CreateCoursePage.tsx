@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/clerk-react";
 import { supabase } from "../lib/supabase";
+import { Eye, EyeOff } from "lucide-react";
 
 export function CreateCoursePage() {
     const navigate = useNavigate();
@@ -22,6 +23,7 @@ export function CreateCoursePage() {
     const [testingGoals, setTestingGoals] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const addSection = () => {
         setSections([...sections, { title: '', content: '' }]);
@@ -57,15 +59,15 @@ export function CreateCoursePage() {
             const response = await fetch(goals.trim(), {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ message: courseTitle || 'Test course goals' })
+                body: JSON.stringify({ message: testMessage || '' })
             });
 
             const data = await response.json();
 
             if (response.ok && data.status === 'success') {
-                setGoalsStatus({ status: 'success', message: data.message || 'Goals link is working correctly!' });
+                setGoalsStatus({ status: 'success', message: JSON.stringify(data, null, 2) });
             } else {
-                setGoalsStatus({ status: 'error', message: data.message || 'Goals link returned an error' });
+                setGoalsStatus({ status: 'error', message: JSON.stringify(data, null, 2) });
             }
         } catch (error) {
             setGoalsStatus({ status: 'error', message: 'Failed to connect to goals link. Please check the URL.' });
@@ -246,13 +248,23 @@ Connect your course to an external API endpoint (optional). If provided, student
 
                                     <div className="mb-4">
                                         <Label htmlFor="authorizationHeader" className="text-white mb-2 block">Authorization Header (Optional)</Label>
-                                        <Input
-                                            id="authorizationHeader"
-                                            placeholder=""
-                                            value={authorizationHeader}
-                                            onChange={(e) => setAuthorizationHeader(e.target.value)}
-                                            className="bg-transparent text-white placeholder:text-gray-400"
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                id="authorizationHeader"
+                                                placeholder=""
+                                                type={showPassword ? "text" : "password"}
+                                                value={authorizationHeader}
+                                                onChange={(e) => setAuthorizationHeader(e.target.value)}
+                                                className="bg-transparent text-white placeholder:text-gray-400 pr-10"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                            >
+                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
                                         <p className="text-gray-400 text-xs mt-1">
                                             Authorization header to use for goals API calls. we will save this on database to call your URL later.
                                         </p>
@@ -271,14 +283,19 @@ Connect your course to an external API endpoint (optional). If provided, student
 
                                         </div>
                                     </div>
-                                    <div className="mb-4">
-                                        <p className="text-gray-300 text-sm">
-                                            This endpoint will receive a POST request with JSON: <code className="bg-white/10 px-2 py-1 rounded text-purple-300">{"{ \"message\": \"course_title\" }"}</code>
-                                        </p>
-                                        <p className="text-gray-300 text-sm mt-1">
-                                            Expected response: <code className="bg-white/10 px-2 py-1 rounded text-purple-300">{"{ \"status\": \"success|error\", \"message\": \"response_message\" }"}</code>
-                                        </p>
-                                    </div>
+                                    {goalsStatus.status && (
+                                        <div className="mb-4">
+                                            <div className={`px-3 py-2 rounded ${goalsStatus.status === 'success'
+                                                ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                                                : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                                                }`}>
+                                                <div className="font-semibold mb-2">Server Response:</div>
+                                                <pre className="text-xs font-mono bg-black/20 p-2 rounded overflow-x-auto">
+                                                    <code>{goalsStatus.message}</code>
+                                                </pre>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="flex gap-2 items-center">
                                         <Button
                                             variant="outline"
@@ -289,14 +306,7 @@ Connect your course to an external API endpoint (optional). If provided, student
                                         >
                                             Test Link
                                         </Button>
-                                        {goalsStatus.status && (
-                                            <div className={`text-sm px-3 py-1 rounded ${goalsStatus.status === 'success'
-                                                ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                                                : 'bg-red-500/20 text-red-300 border border-red-500/30'
-                                                }`}>
-                                                {goalsStatus.message}
-                                            </div>
-                                        )}
+
                                     </div>
                                 </div>
                             </div>

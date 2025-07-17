@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/clerk-react";
 import { supabase } from "../lib/supabase";
+import { Eye, EyeOff } from "lucide-react";
 
 interface Course {
     id: string;
@@ -36,6 +37,7 @@ export function EditCoursePage() {
     const [testingGoals, setTestingGoals] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (courseId) {
@@ -105,21 +107,18 @@ export function EditCoursePage() {
                 headers['Authorization'] = "Bearer " + authorizationHeader.trim();
             }
 
-            // Use test message if provided, otherwise fall back to course title or default
-            const messageToSend = testMessage.trim() || courseTitle || 'Test course goals';
-
             const response = await fetch(goals.trim(), {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ message: messageToSend })
+                body: JSON.stringify({ message: testMessage || '' })
             });
 
             const data = await response.json();
 
             if (response.ok && data.status === 'success') {
-                setGoalsStatus({ status: 'success', message: data.message || 'Goals link is working correctly!' });
+                setGoalsStatus({ status: 'success', message: JSON.stringify(data, null, 2) });
             } else {
-                setGoalsStatus({ status: 'error', message: data.message || 'Goals link returned an error' });
+                setGoalsStatus({ status: 'error', message: JSON.stringify(data, null, 2) });
             }
         } catch (error) {
             setGoalsStatus({ status: 'error', message: 'Failed to connect to goals link. Please check the URL.' });
@@ -345,13 +344,23 @@ export function EditCoursePage() {
 
                                     <div className="mb-4">
                                         <Label htmlFor="authorizationHeader" className="text-white mb-2 block">Authorization Header (Optional)</Label>
-                                        <Input
-                                            id="authorizationHeader"
-                                            placeholder="Authorization token"
-                                            value={authorizationHeader}
-                                            onChange={(e) => setAuthorizationHeader(e.target.value)}
-                                            className="bg-transparent text-white placeholder:text-gray-400"
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                id="authorizationHeader"
+                                                placeholder="Authorization token"
+                                                value={authorizationHeader}
+                                                type={showPassword ? "text" : "password"}
+                                                onChange={(e) => setAuthorizationHeader(e.target.value)}
+                                                className="bg-transparent text-white placeholder:text-gray-400 pr-10"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                            >
+                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="mb-4">
@@ -365,6 +374,19 @@ export function EditCoursePage() {
                                         />
                                     </div>
 
+                                    {goalsStatus.status && (
+                                        <div className="mb-4">
+                                            <div className={`px-3 py-2 rounded ${goalsStatus.status === 'success'
+                                                ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                                                : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                                                }`}>
+                                                <div className="font-semibold mb-2">Server Response:</div>
+                                                <pre className="text-xs font-mono bg-black/20 p-2 rounded overflow-x-auto">
+                                                    <code>{goalsStatus.message}</code>
+                                                </pre>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="flex gap-2 items-center">
                                         <Button
                                             variant="outline"
@@ -375,14 +397,6 @@ export function EditCoursePage() {
                                         >
                                             Test Link
                                         </Button>
-                                        {goalsStatus.status && (
-                                            <div className={`text-sm px-3 py-1 rounded ${goalsStatus.status === 'success'
-                                                ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                                                : 'bg-red-500/20 text-red-300 border border-red-500/30'
-                                                }`}>
-                                                {goalsStatus.message}
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </div>
