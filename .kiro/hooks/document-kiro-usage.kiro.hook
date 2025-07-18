@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "name": "Document Kiro Usage",
+  "name": "CREATE KIRO USAGE AUTO",
   "description": "Automatically create or update HOW_KIRO_WAS_USED.md documentation whenever .kiro configuration files are modified",
   "version": "1",
   "when": {

@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "name": "Create OSI License",
+  "name": "CREATE OSI LICENSE AUTO",
   "description": "Automatically creates or updates an OSI-compliant license file when project configuration files are modified",
   "version": "1",
   "when": {

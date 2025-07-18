@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "name": "Create AKINDO_TEAM.md",
+  "name": "CREATE AKINDO PITCH",
   "description": "Creates a project information file in the buildathon folder with project details and answers to key questions",
   "version": "1",
   "when": {

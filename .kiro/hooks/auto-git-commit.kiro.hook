@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "name": "Auto Git Commit & Push",
+  "name": "GIT PUSH",
   "description": "Automatically stages all changes, creates a commit with proper conventional commit format based on commit-messages.md guidelines, and pushes to remote repository",
   "version": "1",
   "when": {

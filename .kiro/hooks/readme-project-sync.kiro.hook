@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "name": "README Project Sync",
+  "name": "CREATE README AUTO",
   "description": "Automatically updates the README.md file based on changes to project structure, package.json, configuration files, and source code to keep documentation aligned with the current state of the project",
   "version": "1",
   "when": {

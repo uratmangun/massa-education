@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "name": "Project Story Generator",
+  "name": "CREATE DEVPOST AUTO",
   "description": "Monitors changes to key project files and generates a PROJECT_STORY.md file with inspiration, what it does, how it was built, challenges, accomplishments, learnings, next steps, tech stack, project name, and elevator pitch",
   "version": "1",
   "when": {
