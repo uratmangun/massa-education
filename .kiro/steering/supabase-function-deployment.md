@@ -88,9 +88,16 @@ docker restart $CONTAINER_ID
 
 # 4. Verify deployment
 docker logs $CONTAINER_ID --tail 10
+
+# 5. For new functions only: Restart Supabase stack if needed
+# Only use this step when deploying a brand new function that has never existed before
+# Skip this step when updating existing functions
+bunx supabase stop
+bunx supabase start
 ```
 3. **Test**: `curl -X POST http://127.0.0.1:54321/functions/v1/my-function -H "Authorization: Bearer [anon-key]" -H "Content-Type: application/json" -d '{"test": "data"}'`
 4. **Verify**: Check function response and container logs
+5. **New Functions Only**: If this is a brand new function (not an update), restart the Supabase stack to ensure proper recognition
 
 ### Benefits
 
@@ -105,9 +112,11 @@ docker logs $CONTAINER_ID --tail 10
 
 If functions are not being recognized by the Edge Functions container after using the docker cp method, try these solutions:
 
-#### Solution 1: Restart Supabase Stack
+#### Solution 1: Restart Supabase Stack (For New Functions Only)
 
-Sometimes the Edge Functions container may not pick up new functions properly. Restart the entire Supabase stack:
+**⚠️ Use this method ONLY when deploying a brand new Edge Function that has never existed before.**
+
+For updating existing functions, use the regular deployment method above (docker cp + docker restart). The full stack restart is only necessary when the Edge Functions container needs to recognize a completely new function for the first time.
 
 ```fish
 # Stop all Supabase services
@@ -116,6 +125,14 @@ bunx supabase stop
 # Start all Supabase services
 bunx supabase start
 ```
+
+**When to use:**
+- Deploying a new function that doesn't exist yet
+- First-time function deployment after creating new function files
+
+**When NOT to use:**
+- Updating existing functions (use regular docker cp method instead)
+- Redeploying functions that are already working
 
 #### Solution 2: Check Container Logs
 

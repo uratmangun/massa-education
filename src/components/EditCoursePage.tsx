@@ -213,7 +213,6 @@ export function EditCoursePage() {
                 alert('Failed to update course. Please try again.');
             } else {
                 alert('Course updated successfully!');
-                navigate(`/course/${course.id}`);
             }
         } catch (error) {
             console.error('Error updating course:', error);

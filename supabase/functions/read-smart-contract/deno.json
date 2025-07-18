@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "@massa-web3": "https://deno.land/x/massa_web3@v4.1.0/mod.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom"]
+  }
+}
