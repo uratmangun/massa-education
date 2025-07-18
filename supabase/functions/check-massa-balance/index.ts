@@ -120,8 +120,20 @@ serve(async (req) => {
       );
     }
 
-    const balanceNanoMas = BigInt(addressData.candidate_balance || '0');
-    const balanceMas = Number(balanceNanoMas) / 1e9; // Convert nano MAS to MAS
+    // Handle both integer and decimal balance formats
+    const rawBalance = addressData.candidate_balance || '0';
+    let balanceNanoMas: bigint;
+    let balanceMas: number;
+    
+    if (rawBalance.includes('.')) {
+      // If balance contains decimal (like buildnet), it's already in MAS format
+      balanceMas = parseFloat(rawBalance);
+      balanceNanoMas = BigInt(Math.floor(balanceMas * 1e9)); // Convert to nano MAS
+    } else {
+      // If balance is integer (like mainnet), it's in nano MAS format
+      balanceNanoMas = BigInt(rawBalance);
+      balanceMas = Number(balanceNanoMas) / 1e9; // Convert nano MAS to MAS
+    }
 
     return new Response(
       JSON.stringify({
