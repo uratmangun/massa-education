@@ -105,6 +105,8 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
+# Custom JWT secret for enhanced security
+jwt_secret = "env(JWT_SECRET)"
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
 site_url = "http://127.0.0.1:3000"
